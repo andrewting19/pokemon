@@ -42,11 +42,14 @@
 - [ ] Verify real save creation in Pokemon Platinum and confirm `.sav` export/import round-trip.
 - [ ] Validate mobile Safari and Android Chrome behavior on physical devices.
 - [ ] Tune thumb-control ergonomics for portrait and landscape play.
-- [ ] Add configurable control opacity/size and reduce accidental edge touches.
-- [ ] Add “remember last ROM on this device” and resume-last-session UX.
+- [x] Add configurable control opacity/size and reduce accidental edge touches.
+- [x] Add “remember last ROM on this device” and resume-last-session UX.
 - [ ] Verify PWA offline boot, background/resume behavior, and storage retention.
 - [ ] Check audio unlock and mute-switch behavior on iPhone.
 - [ ] Check battery/thermal impact during longer sessions.
 - [ ] Evaluate whether the vendored runtime should be rebuilt from source for longer-term maintainability.
 - [ ] Decide whether to suppress or upstream the runtime's noisy `FS.syncfs` and ARM I/O console output.
 - [ ] Add end-to-end tests once a legal homebrew ROM fixture is available.
+- [x] Convert repo documentation to agent-facing guidance and symlink `README.md` / `CLAUDE.md`.
+- [x] Initialize git repository and push to GitHub.
+- [x] Add GitHub Pages deployment workflow and verify a successful deploy.

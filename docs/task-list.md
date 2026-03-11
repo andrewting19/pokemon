@@ -1,0 +1,52 @@
+# Platinum Web Task List
+
+- [x] Compare browser-viable Nintendo DS emulator paths.
+- [x] Validate that `ds-anywhere` publishes usable browser runtime artifacts.
+- [x] Choose the frontend stack and runtime integration approach.
+- [x] Write the implementation plan.
+- [x] Create a comprehensive execution checklist.
+- [x] Scaffold the frontend project.
+- [x] Vendor the emulator runtime assets into the app.
+- [x] Install frontend and PWA dependencies.
+- [x] Replace the default Vite shell with the emulator product shell.
+- [x] Create typed runtime access for `window.WebMelon`.
+- [x] Create utilities for ROM naming, save naming, and file formatting.
+- [x] Build a runtime hook that tracks SDK readiness and storage readiness.
+- [x] Mount and prepare emulator storage directories.
+- [x] Add ROM import flow with legal-safe messaging.
+- [x] Add explicit audio unlock during emulator start.
+- [x] Create the dual-screen emulator stage.
+- [x] Start emulation after ROM import and stage readiness.
+- [x] Surface pause and resume controls.
+- [x] Surface fast-forward control.
+- [x] Add top-screen / bottom-screen focus switching.
+- [x] Add a portrait-friendly layout.
+- [x] Add a landscape-friendly layout.
+- [x] Build the D-pad touch controls.
+- [x] Build the A/B/X/Y touch controls.
+- [x] Build Start/Select/L/R utility controls.
+- [x] Ensure all virtual controls release correctly on pointer cancel and blur.
+- [x] Wire bottom-screen stylus interaction through the emulator canvas.
+- [x] Show runtime readiness and error states.
+- [x] Show save-in-progress and save-complete states.
+- [x] Add save export.
+- [x] Add save import.
+- [x] Add session metadata such as loaded ROM name and derived game title.
+- [x] Create product-grade visual design and typography.
+- [x] Add installable PWA metadata and icons.
+- [x] Verify the app builds cleanly.
+- [x] Verify the app loads in a phone-sized browser viewport.
+- [x] Verify import, status, and control behavior manually with a real legal ROM dump.
+- [x] Update docs with usage notes and constraints.
+- [x] Clean up generated scaffold leftovers.
+- [ ] Verify real save creation in Pokemon Platinum and confirm `.sav` export/import round-trip.
+- [ ] Validate mobile Safari and Android Chrome behavior on physical devices.
+- [ ] Tune thumb-control ergonomics for portrait and landscape play.
+- [ ] Add configurable control opacity/size and reduce accidental edge touches.
+- [ ] Add “remember last ROM on this device” and resume-last-session UX.
+- [ ] Verify PWA offline boot, background/resume behavior, and storage retention.
+- [ ] Check audio unlock and mute-switch behavior on iPhone.
+- [ ] Check battery/thermal impact during longer sessions.
+- [ ] Evaluate whether the vendored runtime should be rebuilt from source for longer-term maintainability.
+- [ ] Decide whether to suppress or upstream the runtime's noisy `FS.syncfs` and ARM I/O console output.
+- [ ] Add end-to-end tests once a legal homebrew ROM fixture is available.

@@ -91,7 +91,7 @@ function App() {
           <p className="eyebrow">Field Kit For Nintendo DS Sessions</p>
           <h1>Platinum Web</h1>
           <p className="lede">
-            A portable-browser command deck for Pokemon Platinum: cached local cartridges,
+            A portable-browser command deck for Pokemon Platinum: cached local sessions,
             thumb-first controls, fast screen promotion, and save recovery built for real play.
           </p>
           <div className="hero-badges">
@@ -160,8 +160,8 @@ function App() {
 
           <div className="disclosure">
             <p>
-              The app never ships game data. Users import their own cartridge dump. If they want,
-              the imported ROM can stay cached on that device and resume locally later.
+              Imported ROMs can stay cached on this device for quick restart, and save files can
+              be backed up or restored directly from the shell.
             </p>
           </div>
         </div>
@@ -174,7 +174,7 @@ function App() {
               <p>
                 {rememberedRom
                   ? `${rememberedRom.fileName} is cached locally for quick restart.`
-                  : 'Import a legal `.nds` dump or keep the current one cached on this device.'}
+                  : 'Import an `.nds` file or keep the current one cached on this device.'}
               </p>
             </div>
             <div className="launch-actions">

@@ -225,7 +225,7 @@ export function useEmulator() {
             clearRememberedRom()
           }
           setStorageReady(true)
-          setStatus('Runtime ready. Import a legally dumped DS ROM to begin.')
+          setStatus('Runtime ready. Import a DS ROM to begin.')
         })
         .catch(() => {
           setError('Browser storage could not be prepared.')

@@ -1,12 +1,85 @@
-import type { CSSProperties } from 'react'
+import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ControlButton } from './components/ControlButton'
 import { useEmulator } from './hooks/useEmulator'
-import { formatBytes } from './lib/emulator'
+import { formatBytes, pressButton, releaseButton, type DsButton } from './lib/emulator'
+
+/* ── Inline SVG icons ── */
+
+function GearIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  )
+}
+
+/* ── Face / D-pad button helper ── */
+
+function GameButton({
+  button,
+  label,
+  className,
+}: {
+  button: DsButton
+  label: string
+  className: string
+}) {
+  const begin = (e: ReactPointerEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    e.currentTarget.setPointerCapture(e.pointerId)
+    pressButton(button)
+  }
+  const end = (e: ReactPointerEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    releaseButton(button)
+  }
+
+  return (
+    <button
+      className={className}
+      onPointerDown={begin}
+      onPointerUp={end}
+      onPointerCancel={end}
+      onPointerLeave={end}
+    >
+      {label}
+    </button>
+  )
+}
+
+/* ── Shoulder button helper ── */
+
+function ShoulderButton({ button, label }: { button: DsButton; label: string }) {
+  const begin = (e: ReactPointerEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    e.currentTarget.setPointerCapture(e.pointerId)
+    pressButton(button)
+  }
+  const end = (e: ReactPointerEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    releaseButton(button)
+  }
+
+  return (
+    <button
+      className="shoulder-btn"
+      onPointerDown={begin}
+      onPointerUp={end}
+      onPointerCancel={end}
+      onPointerLeave={end}
+    >
+      {label}
+    </button>
+  )
+}
+
+/* ── Main App ── */
 
 function App() {
   const romInputRef = useRef<HTMLInputElement | null>(null)
   const saveInputRef = useRef<HTMLInputElement | null>(null)
+  const [drawerOpen, setDrawerOpen] = useState(false)
   const [controlScale, setControlScale] = useState(() => {
     const saved = window.localStorage.getItem('platinum-web:control-scale')
     return saved ? Number(saved) : 1
@@ -15,6 +88,7 @@ function App() {
     const saved = window.localStorage.getItem('platinum-web:control-opacity')
     return saved ? Number(saved) : 0.92
   })
+
   const {
     sdkReady,
     storageReady,
@@ -47,38 +121,31 @@ function App() {
     window.localStorage.setItem('platinum-web:control-opacity', String(controlOpacity))
   }, [controlOpacity])
 
+  // URL-based ROM loading
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const romUrl = params.get('romUrl')
-
-    if (!romUrl || !sdkReady || !storageReady || running) {
-      return
-    }
-
+    if (!romUrl || !sdkReady || !storageReady || running) return
     const romName = params.get('romName') ?? undefined
     void startFromUrl(romUrl, romName)
   }, [running, sdkReady, startFromUrl, storageReady])
 
-  const sessionFacts = useMemo(() => {
-    if (!session) {
-      return [
-        'Keyboard: arrows move, Z = A, X = B, Enter = Start.',
-        'Bottom-screen clicks are routed through a direct pointer bridge.',
-        'Imported ROMs can now be cached on-device for quick resume.',
-      ]
-    }
+  // LED status
+  const ledClass = useMemo(() => {
+    if (error) return 'status-led error'
+    if (running) return 'status-led live'
+    if (!sdkReady || !storageReady) return 'status-led loading'
+    return 'status-led'
+  }, [error, running, sdkReady, storageReady])
 
-    return [
-      session.gameTitle,
-      session.fileName,
-      `${formatBytes(session.fileSize)} loaded`,
-      'Keyboard: arrows move, Z = A, X = B, Enter = Start.',
-    ]
-  }, [session])
+  // Save banner visibility
+  const showSaveBanner = saveBanner !== 'No save activity yet.' && saveBanner !== 'Save storage is idle.'
+
+  const showWelcome = !running
 
   return (
     <main
-      className="shell"
+      className="dsi-shell"
       style={
         {
           '--control-scale': controlScale,
@@ -86,201 +153,258 @@ function App() {
         } as CSSProperties
       }
     >
-      <section className="hero-panel">
-        <div className="hero-copy">
-          <p className="eyebrow">Field Kit For Nintendo DS Sessions</p>
-          <h1>Platinum Web</h1>
-          <p className="lede">
-            A portable-browser command deck for Pokemon Platinum: cached local sessions,
-            thumb-first controls, fast screen promotion, and save recovery built for real play.
-          </p>
-          <div className="hero-badges">
-            <span>On-device ROM cache</span>
-            <span>PWA installable</span>
-            <span>Real save export/import</span>
+      {/* Shoulder buttons */}
+      <div className="shoulder-bar">
+        <ShoulderButton button="L" label="L" />
+        <ShoulderButton button="R" label="R" />
+      </div>
+
+      {/* Screens */}
+      <div className={`screens-area ${screenFocus === 'bottom' ? 'bottom-focus' : ''}`}>
+        <div className="screen-bezel top-bezel">
+          {showWelcome && (
+            <div className="welcome-overlay">
+              <div className="welcome-title">Platinum Web</div>
+              <div className="welcome-sub">Nintendo DS in your browser</div>
+              <div className="welcome-actions">
+                <button
+                  className="welcome-btn"
+                  disabled={!sdkReady || !storageReady}
+                  onClick={() => romInputRef.current?.click()}
+                >
+                  {sdkReady && storageReady ? 'Load ROM' : 'Initializing...'}
+                </button>
+                {rememberedRom && (
+                  <button
+                    className="welcome-btn ghost"
+                    onClick={() => resumeRememberedRom()}
+                  >
+                    Resume: {rememberedRom.fileName}
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+          <canvas id="top-screen" width="256" height="192" />
+        </div>
+
+        <div className="hinge">
+          <div className={ledClass} />
+        </div>
+
+        <div className="screen-bezel bottom-bezel">
+          <canvas id="bottom-screen" width="256" height="192" />
+        </div>
+      </div>
+
+      {/* Minimal status */}
+      <div className="status-bar">
+        <span className="status-text">{status}</span>
+      </div>
+
+      {/* Controls */}
+      <div className="controls-area">
+        {/* D-pad and Face buttons */}
+        <div className="button-row">
+          <div className="dpad-container">
+            <div className="dpad-cross" />
+            <div className="dpad-center" />
+            <GameButton button="DPAD_UP" label="" className="dpad-zone up" />
+            <GameButton button="DPAD_DOWN" label="" className="dpad-zone down" />
+            <GameButton button="DPAD_LEFT" label="" className="dpad-zone left" />
+            <GameButton button="DPAD_RIGHT" label="" className="dpad-zone right" />
+          </div>
+
+          <div className="face-container">
+            <GameButton button="X" label="X" className="face-btn x-btn" />
+            <GameButton button="Y" label="Y" className="face-btn y-btn" />
+            <GameButton button="A" label="A" className="face-btn a-btn" />
+            <GameButton button="B" label="B" className="face-btn b-btn" />
           </div>
         </div>
 
-        <div className="status-card">
-          <div className="status-row">
-            <span>Runtime</span>
-            <strong>{sdkReady ? 'Loaded' : 'Compiling'}</strong>
-          </div>
-          <div className="status-row">
-            <span>Storage</span>
-            <strong>{storageReady ? 'Ready' : 'Preparing'}</strong>
-          </div>
-          <div className="status-row">
-            <span>Session</span>
-            <strong>{running ? 'Live' : 'Idle'}</strong>
-          </div>
-          <div className="status-row">
-            <span>Cached ROM</span>
-            <strong>{rememberedRom ? 'Available' : 'Empty'}</strong>
-          </div>
-          <p className="status-text">{status}</p>
-          <p className="save-pill">{saveBanner}</p>
-          {error ? <p className="error-pill">{error}</p> : null}
+        {/* Select / Start / Screen toggle */}
+        <div className="utility-row">
+          <GameButton button="SELECT" label="Select" className="pill-btn" />
+          <GameButton button="START" label="Start" className="pill-btn" />
+          <button
+            className="pill-btn"
+            onClick={() => setScreenFocus(screenFocus === 'top' ? 'bottom' : 'top')}
+          >
+            {screenFocus === 'top' ? 'Touch' : 'Top'}
+          </button>
         </div>
-      </section>
+      </div>
 
-      <section className="console-grid">
-        <div className="stage-panel">
-          <div className="stage-header">
-            <div>
-              <p className="panel-label">Current Cartridge</p>
-              <h2>{session?.gameTitle ?? rememberedRom?.fileName ?? 'No ROM loaded'}</h2>
-            </div>
-            <div className="screen-toggle">
-              <button
-                className={screenFocus === 'top' ? 'mini-button active' : 'mini-button'}
-                onClick={() => setScreenFocus('top')}
-              >
-                Top Focus
-              </button>
-              <button
-                className={screenFocus === 'bottom' ? 'mini-button active' : 'mini-button'}
-                onClick={() => setScreenFocus('bottom')}
-              >
-                Touch Focus
-              </button>
+      {/* Menu toggle button */}
+      <button
+        className={`menu-toggle ${drawerOpen ? 'open' : ''}`}
+        onClick={() => setDrawerOpen(!drawerOpen)}
+      >
+        <GearIcon />
+      </button>
+
+      {/* Drawer backdrop */}
+      <div
+        className={`drawer-backdrop ${drawerOpen ? 'visible' : ''}`}
+        onClick={() => setDrawerOpen(false)}
+      />
+
+      {/* Settings / Actions drawer */}
+      <div className={`drawer ${drawerOpen ? 'open' : ''}`}>
+        <div className="drawer-handle" />
+
+        {/* Session info */}
+        {session && (
+          <div className="drawer-section">
+            <div className="drawer-label">Now Playing</div>
+            <div className="session-info">
+              <div className="session-info-row">
+                <span>Title</span>
+                <span>{session.gameTitle}</span>
+              </div>
+              <div className="session-info-row">
+                <span>File</span>
+                <span>{session.fileName}</span>
+              </div>
+              <div className="session-info-row">
+                <span>Size</span>
+                <span>{formatBytes(session.fileSize)}</span>
+              </div>
             </div>
           </div>
+        )}
 
-          <div className={`screen-stack ${screenFocus === 'bottom' ? 'bottom-focus' : ''}`}>
-            <div className="screen-card top-screen-card">
-              <span className="screen-label">Top Screen</span>
-              <canvas id="top-screen" width="256" height="192" />
-            </div>
-            <div className="screen-card bottom-screen-card">
-              <span className="screen-label">Bottom Screen</span>
-              <canvas id="bottom-screen" width="256" height="192" />
-            </div>
-          </div>
-
-          <div className="disclosure">
-            <p>
-              Imported ROMs can stay cached on this device for quick restart, and save files can
-              be backed up or restored directly from the shell.
-            </p>
-          </div>
-        </div>
-
-        <div className="control-panel">
-          <div className="launch-panel">
-            <div className="launch-copy">
-              <p className="panel-label">Launch Bay</p>
-              <h3>{rememberedRom ? 'Resume Or Swap Cartridges' : 'Load A Cartridge'}</h3>
-              <p>
-                {rememberedRom
-                  ? `${rememberedRom.fileName} is cached locally for quick restart.`
-                  : 'Import an `.nds` file or keep the current one cached on this device.'}
-              </p>
-            </div>
-            <div className="launch-actions">
-              <button className="action-button" onClick={() => romInputRef.current?.click()}>
-                Import ROM
-              </button>
-              <button
-                className="action-button ghost"
-                disabled={!rememberedRom || running}
-                onClick={() => resumeRememberedRom()}
-              >
-                Resume Cached ROM
-              </button>
-              <button
-                className="action-button ghost"
-                disabled={!rememberedRom}
-                onClick={() => void forgetRememberedRom()}
-              >
-                Forget Cached ROM
-              </button>
-              <button
-                className="action-button ghost"
-                disabled={!session}
-                onClick={() => saveInputRef.current?.click()}
-              >
-                Import Save
-              </button>
-              <button className="action-button ghost" disabled={!session} onClick={() => exportSave()}>
-                Export Save
-              </button>
-            </div>
-          </div>
-
-          <div className="tune-panel">
-            <div>
-              <p className="panel-label">Control Scale</p>
-              <input
-                className="range-input"
-                type="range"
-                min="0.82"
-                max="1.28"
-                step="0.01"
-                value={controlScale}
-                onChange={(event) => setControlScale(Number(event.target.value))}
-              />
-            </div>
-            <div>
-              <p className="panel-label">Control Opacity</p>
-              <input
-                className="range-input"
-                type="range"
-                min="0.55"
-                max="1"
-                step="0.01"
-                value={controlOpacity}
-                onChange={(event) => setControlOpacity(Number(event.target.value))}
-              />
-            </div>
-          </div>
-
-          <div className="utility-cluster compact">
-            <button className="mini-button" disabled={!running} onClick={() => togglePause()}>
+        {/* Playback */}
+        <div className="drawer-section">
+          <div className="drawer-label">Playback</div>
+          <div className="playback-row">
+            <button
+              className={`playback-btn ${paused ? 'active' : ''}`}
+              disabled={!running}
+              onClick={() => togglePause()}
+            >
               {paused ? 'Resume' : 'Pause'}
             </button>
-            <button className="mini-button" disabled={!running} onClick={() => toggleFastForward()}>
+            <button
+              className={`playback-btn ${fastForward ? 'active' : ''}`}
+              disabled={!running}
+              onClick={() => toggleFastForward()}
+            >
               {fastForward ? '1x' : '2x'}
             </button>
-            <button className="mini-button" disabled={!running} onClick={() => stop()}>
+            <button
+              className="playback-btn"
+              disabled={!running}
+              onClick={() => stop()}
+            >
               Stop
             </button>
           </div>
+        </div>
 
-          <div className="control-deck">
-            <div className="dpad">
-              <ControlButton button="DPAD_UP" label="Up" className="up" />
-              <ControlButton button="DPAD_LEFT" label="Left" className="left" />
-              <ControlButton button="DPAD_RIGHT" label="Right" className="right" />
-              <ControlButton button="DPAD_DOWN" label="Down" className="down" />
-            </div>
-
-            <div className="face-buttons">
-              <ControlButton button="X" label="X" accent="secondary" className="x" />
-              <ControlButton button="Y" label="Y" accent="secondary" className="y" />
-              <ControlButton button="A" label="A" accent="primary" className="a" />
-              <ControlButton button="B" label="B" accent="primary" className="b" />
-            </div>
-          </div>
-
-          <div className="shoulders">
-            <ControlButton button="L" label="L" accent="utility" />
-            <ControlButton button="R" label="R" accent="utility" />
-            <ControlButton button="SELECT" label="Select" accent="utility" />
-            <ControlButton button="START" label="Start" accent="utility" />
-          </div>
-
-          <div className="facts-card">
-            <p className="panel-label">Session Notes</p>
-            <ul>
-              {sessionFacts.map((fact) => (
-                <li key={fact}>{fact}</li>
-              ))}
-            </ul>
+        {/* Cartridge */}
+        <div className="drawer-section">
+          <div className="drawer-label">Cartridge</div>
+          <div className="drawer-actions">
+            <button
+              className="drawer-btn primary"
+              onClick={() => romInputRef.current?.click()}
+            >
+              Import ROM
+            </button>
+            <button
+              className="drawer-btn"
+              disabled={!rememberedRom || running}
+              onClick={() => resumeRememberedRom()}
+            >
+              Resume Cached
+            </button>
+            <button
+              className="drawer-btn danger"
+              disabled={!rememberedRom}
+              onClick={() => void forgetRememberedRom()}
+            >
+              Forget Cached
+            </button>
           </div>
         </div>
-      </section>
 
+        {/* Saves */}
+        <div className="drawer-section">
+          <div className="drawer-label">Save Data</div>
+          <div className="drawer-actions">
+            <button
+              className="drawer-btn"
+              disabled={!session}
+              onClick={() => exportSave()}
+            >
+              Export Save
+            </button>
+            <button
+              className="drawer-btn"
+              disabled={!session}
+              onClick={() => saveInputRef.current?.click()}
+            >
+              Import Save
+            </button>
+          </div>
+        </div>
+
+        {/* Tuning */}
+        <div className="drawer-section">
+          <div className="drawer-label">Controls</div>
+          <div className="slider-row">
+            <span className="slider-label">Scale</span>
+            <input
+              className="slider-input"
+              type="range"
+              min="0.82"
+              max="1.28"
+              step="0.01"
+              value={controlScale}
+              onChange={(e) => setControlScale(Number(e.target.value))}
+            />
+          </div>
+          <div className="slider-row">
+            <span className="slider-label">Opacity</span>
+            <input
+              className="slider-input"
+              type="range"
+              min="0.55"
+              max="1"
+              step="0.01"
+              value={controlOpacity}
+              onChange={(e) => setControlOpacity(Number(e.target.value))}
+            />
+          </div>
+        </div>
+
+        {/* Info */}
+        <div className="drawer-section">
+          <div className="drawer-label">Keyboard</div>
+          <div className="session-info">
+            <div className="session-info-row"><span>D-pad</span><span>Arrow keys</span></div>
+            <div className="session-info-row"><span>A / B</span><span>Z / X</span></div>
+            <div className="session-info-row"><span>X / Y</span><span>S / A</span></div>
+            <div className="session-info-row"><span>L / R</span><span>Q / W</span></div>
+            <div className="session-info-row"><span>Start</span><span>Enter</span></div>
+            <div className="session-info-row"><span>Select</span><span>Shift</span></div>
+          </div>
+        </div>
+      </div>
+
+      {/* Save toast */}
+      <div className={`save-toast ${showSaveBanner ? 'visible' : ''}`}>
+        {saveBanner}
+      </div>
+
+      {/* Error toast */}
+      {error && (
+        <div className="error-toast">{error}</div>
+      )}
+
+      {/* Hidden file inputs */}
       <input
         ref={romInputRef}
         className="hidden-input"
@@ -288,13 +412,10 @@ function App() {
         accept=".nds"
         onChange={(event) => {
           const file = event.target.files?.[0]
-          if (file) {
-            void start(file)
-          }
+          if (file) void start(file)
           event.currentTarget.value = ''
         }}
       />
-
       <input
         ref={saveInputRef}
         className="hidden-input"
@@ -302,9 +423,7 @@ function App() {
         accept=".sav"
         onChange={(event) => {
           const file = event.target.files?.[0]
-          if (file) {
-            void importSave(file)
-          }
+          if (file) void importSave(file)
           event.currentTarget.value = ''
         }}
       />

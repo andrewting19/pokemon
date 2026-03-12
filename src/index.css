@@ -113,43 +113,46 @@ canvas {
 .shoulder-bar {
   display: flex;
   justify-content: space-between;
-  padding: calc(var(--safe-top) + 4px) 0 0;
+  padding: calc(var(--safe-top)) 0 0;
   flex-shrink: 0;
 }
 
 .shoulder-btn {
-  flex: 0 0 auto;
-  width: 30%;
-  max-width: 140px;
-  height: calc(36px * var(--control-scale));
-  background: linear-gradient(180deg, var(--btn-surface) 0%, #222530 100%);
+  flex: 0 0 38%;
+  height: calc(30px * var(--control-scale));
+  background: linear-gradient(180deg, #33373f 0%, var(--btn-surface) 100%);
   border: 1px solid var(--btn-border);
+  border-top: none;
   color: var(--text-dim);
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 500;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   opacity: var(--control-opacity);
   transition: transform 80ms ease, background 80ms ease;
   touch-action: none;
+  box-shadow:
+    0 3px 8px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .shoulder-btn:first-child {
-  border-radius: 0 0 16px 0;
-  border-left: 0;
-  border-top: 0;
+  border-radius: 0 0 14px 0;
+  border-left: none;
 }
 
 .shoulder-btn:last-child {
-  border-radius: 0 0 0 16px;
-  border-right: 0;
-  border-top: 0;
+  border-radius: 0 0 0 14px;
+  border-right: none;
 }
 
 .shoulder-btn:active {
   background: var(--btn-surface-pressed);
   transform: translateY(1px);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.4),
+    inset 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* ========================================
@@ -163,7 +166,7 @@ canvas {
   align-items: center;
   justify-content: center;
   min-height: 0;
-  padding: 4px 12px;
+  padding: 6px 14px;
   gap: 0;
 }
 
@@ -172,9 +175,9 @@ canvas {
   max-width: 420px;
   background: var(--bezel);
   border: 1px solid var(--bezel-border);
-  padding: 6px;
+  padding: 5px;
   position: relative;
-  overflow: hidden;
+  flex-shrink: 0;
 }
 
 .screen-bezel::after {
@@ -198,43 +201,31 @@ canvas {
   border-radius: 4px;
   position: relative;
   z-index: 1;
-}
-
-/* Screen focus modes */
-.screens-area .screen-bezel.top-bezel {
-  flex: 3 1 0;
-}
-
-.screens-area .screen-bezel.bottom-bezel {
-  flex: 1 1 0;
-}
-
-.screens-area.bottom-focus .screen-bezel.top-bezel {
-  flex: 1 1 0;
-}
-
-.screens-area.bottom-focus .screen-bezel.bottom-bezel {
-  flex: 3 1 0;
+  width: 100%;
+  height: auto;
+  display: block;
 }
 
 /* Hinge between screens */
 .hinge {
   width: 100%;
   max-width: 420px;
-  height: 10px;
-  background: var(--hinge);
+  height: 8px;
+  background: linear-gradient(180deg, #0a0c10, var(--hinge) 40%, var(--hinge) 60%, #0a0c10);
   position: relative;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-left: 1px solid var(--bezel-border);
+  border-right: 1px solid var(--bezel-border);
 }
 
 .hinge::before {
   content: '';
-  width: 60%;
+  width: 100%;
   height: 1px;
-  background: var(--hinge-line);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05) 20%, rgba(255, 255, 255, 0.05) 80%, transparent);
 }
 
 /* Status indicator LED */
@@ -918,16 +909,6 @@ canvas {
     border: 1px solid var(--bezel-border);
     border-radius: 28px;
     box-shadow: 0 20px 80px rgba(0, 0, 0, 0.6);
-  }
-
-  .shoulder-btn:first-child {
-    border-radius: 0 0 16px 0;
-    border-left: 0;
-  }
-
-  .shoulder-btn:last-child {
-    border-radius: 0 0 0 16px;
-    border-right: 0;
   }
 }
 

@@ -95,13 +95,11 @@ function App() {
     running,
     paused,
     fastForward,
-    screenFocus,
     status,
     error,
     saveBanner,
     session,
     rememberedRom,
-    setScreenFocus,
     start,
     stop,
     togglePause,
@@ -160,7 +158,7 @@ function App() {
       </div>
 
       {/* Screens */}
-      <div className={`screens-area ${screenFocus === 'bottom' ? 'bottom-focus' : ''}`}>
+      <div className="screens-area">
         <div className="screen-bezel top-bezel">
           {showWelcome && (
             <div className="welcome-overlay">
@@ -227,12 +225,6 @@ function App() {
         <div className="utility-row">
           <GameButton button="SELECT" label="Select" className="pill-btn" />
           <GameButton button="START" label="Start" className="pill-btn" />
-          <button
-            className="pill-btn"
-            onClick={() => setScreenFocus(screenFocus === 'top' ? 'bottom' : 'top')}
-          >
-            {screenFocus === 'top' ? 'Touch' : 'Top'}
-          </button>
         </div>
       </div>
 

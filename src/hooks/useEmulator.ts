@@ -50,6 +50,10 @@ export function useEmulator() {
   const bootstrappedRef = useRef(false)
   const pointerBridgeCleanupRef = useRef<(() => void) | null>(null)
   const autoFetchAttemptedRef = useRef(false)
+  const sdkReadyRef = useRef(sdkReady)
+  const storageReadyRef = useRef(storageReady)
+  sdkReadyRef.current = sdkReady
+  storageReadyRef.current = storageReady
 
   const clearSaveTimer = () => {
     if (saveBannerTimeout.current !== null) {
@@ -340,7 +344,7 @@ export function useEmulator() {
     try {
       setError(null)
 
-      if (!sdkReady || !storageReady) {
+      if (!sdkReadyRef.current || !storageReadyRef.current) {
         throw new Error('The runtime is still preparing.')
       }
 

@@ -549,12 +549,23 @@ canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; 
    ======================================== */
 
 @media (min-width: 700px) {
+  /* Both screens use the SAME width, computed from viewport height.
+     Budget: 2 screens (each W × 0.75) + shoulder(34) + hinge(12) + utility(34) + status(18) + padding(62) = 160px chrome
+     → W = min(480px, (100dvh - 160px) / 1.5)  */
+  :root {
+    --screen-w: min(480px, calc((100dvh - 160px) / 1.5));
+  }
+
   body {
-    background: radial-gradient(ellipse at 50% 30%, #181b22 0%, var(--shell-edge) 60%);
+    background: #0b0d10;
+    background-image:
+      radial-gradient(ellipse at 50% 40%, rgba(30, 35, 48, 0.6) 0%, transparent 70%),
+      radial-gradient(ellipse at 50% 100%, rgba(15, 18, 25, 0.4) 0%, transparent 50%);
   }
 
   .dsi-shell {
-    max-width: 760px;
+    /* Shell width = screen + controls + padding. Sized from screen. */
+    max-width: calc(var(--screen-w) + 320px);
     margin: 0 auto;
     background: transparent;
     overflow: visible;
@@ -564,47 +575,56 @@ canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; 
 
   /* ── Top shell ── */
   .top-shell {
-    background-color: var(--shell);
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-    background-size: 128px;
-    border: 1px solid var(--bezel-border);
+    background-color: #1c1f24;
+    background-image:
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+    background-size: 100px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
     border-bottom: none;
-    border-radius: 20px 20px 2px 2px;
-    padding: 0 28px 10px;
+    border-radius: 18px 18px 2px 2px;
+    padding: 0 20px 8px;
     position: relative;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 -2px 20px rgba(0, 0, 0, 0.2);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      0 -4px 30px rgba(0, 0, 0, 0.3);
   }
 
   /* Camera dot */
   .top-shell::after {
     content: '';
     position: absolute;
-    top: 42px;
+    top: 38px;
     left: 50%;
     transform: translateX(-50%);
-    width: 7px;
-    height: 7px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
-    background: radial-gradient(circle, #1a1d21 30%, #0a0c10 70%);
-    border: 1px solid rgba(255, 255, 255, 0.03);
-    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.8);
+    background: radial-gradient(circle, #13151a 40%, #080a0e 100%);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.9), 0 0 3px rgba(0, 0, 0, 0.4);
     z-index: 5;
   }
 
-  .top-shell .shoulder-bar { padding-top: 4px; }
-  .top-shell .shoulder-btn { flex: 0 0 120px; height: 30px; }
-  .top-shell .screen-bezel { max-width: min(460px, calc((42dvh - 40px) * 4 / 3)); }
+  .top-shell .shoulder-bar { padding-top: 2px; }
+  .top-shell .shoulder-btn { flex: 0 0 110px; height: 28px; font-size: 0.6rem; }
+  .top-shell .screen-bezel { max-width: var(--screen-w); }
 
   /* ── Hinge ── */
   .hinge {
     max-width: none;
-    height: 14px;
+    height: 12px;
     align-self: stretch;
     background: linear-gradient(180deg,
-      #080a0e 0%, #15171c 20%,
-      rgba(255, 255, 255, 0.04) 48%, rgba(255, 255, 255, 0.04) 52%,
-      #15171c 80%, #080a0e 100%);
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3), inset 0 -2px 4px rgba(0, 0, 0, 0.3);
+      #060810 0%,
+      #12141a 15%,
+      #1a1c22 40%,
+      rgba(255, 255, 255, 0.05) 49%, rgba(255, 255, 255, 0.05) 51%,
+      #1a1c22 60%,
+      #12141a 85%,
+      #060810 100%);
+    box-shadow:
+      inset 0 1px 3px rgba(0, 0, 0, 0.4),
+      inset 0 -1px 3px rgba(0, 0, 0, 0.4);
   }
 
   .hinge::before { display: none; }
@@ -612,23 +632,29 @@ canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; 
   .hinge::after {
     content: '';
     position: absolute;
-    left: 10%; right: 10%; top: 50%;
+    left: 8%; right: 8%; top: 50%;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06) 20%, rgba(255, 255, 255, 0.06) 80%, transparent);
+    background: linear-gradient(90deg,
+      transparent,
+      rgba(255, 255, 255, 0.04) 15%,
+      rgba(255, 255, 255, 0.06) 50%,
+      rgba(255, 255, 255, 0.04) 85%,
+      transparent);
     transform: translateY(-50%);
   }
 
-  .status-led { width: 6px; height: 6px; right: 16px; }
+  .status-led { width: 6px; height: 6px; right: 14px; }
 
   /* ── Bottom shell: controls flank screen ── */
   .bottom-shell {
-    background-color: var(--shell);
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-    background-size: 128px;
-    border: 1px solid var(--bezel-border);
+    background-color: #1c1f24;
+    background-image:
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+    background-size: 100px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
     border-top: none;
-    border-radius: 2px 2px 20px 20px;
-    padding: 16px 24px 14px;
+    border-radius: 2px 2px 18px 18px;
+    padding: 12px 16px 12px;
     grid-template-columns: 1fr auto 1fr;
     grid-template-rows: 1fr auto auto;
     grid-template-areas:
@@ -637,59 +663,79 @@ canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; 
       "status status status";
     align-items: center;
     justify-items: center;
-    gap: 8px 16px;
+    gap: 4px 10px;
     position: relative;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 12px 50px rgba(0, 0, 0, 0.5);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      0 8px 40px rgba(0, 0, 0, 0.5),
+      0 2px 8px rgba(0, 0, 0, 0.3);
   }
 
-  /* Speaker grilles */
+  /* Speaker grilles — refined dot pattern */
   .bottom-shell::before,
   .bottom-shell::after {
     content: '';
     position: absolute;
-    bottom: 16px;
-    width: 44px;
-    height: 14px;
-    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
-    background-size: 5px 4px;
+    bottom: 14px;
+    width: 36px;
+    height: 12px;
+    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.05) 0.8px, transparent 0.8px);
+    background-size: 4px 3.5px;
     pointer-events: none;
     z-index: 2;
   }
-  .bottom-shell::before { left: 28px; }
-  .bottom-shell::after { right: 28px; }
+  .bottom-shell::before { left: 20px; }
+  .bottom-shell::after { right: 20px; }
 
-  .bottom-screen-wrapper .screen-bezel { width: min(380px, calc((35dvh - 40px) * 4 / 3)); max-width: min(380px, calc((35dvh - 40px) * 4 / 3)); }
+  /* Both screens: same size */
+  .bottom-screen-wrapper .screen-bezel { width: var(--screen-w); max-width: var(--screen-w); }
 
-  .dpad-container { width: calc(140px * var(--control-scale)); height: calc(140px * var(--control-scale)); }
-  .face-container { width: calc(140px * var(--control-scale)); height: calc(140px * var(--control-scale)); }
-  .face-btn { width: calc(50px * var(--control-scale)); height: calc(50px * var(--control-scale)); font-size: calc(0.85rem * var(--control-scale)); }
-  .pill-btn { height: 30px; padding: 0 18px; font-size: 0.65rem; }
+  /* Controls sized relative to screen — compact but usable */
+  .dpad-container { width: calc(120px * var(--control-scale)); height: calc(120px * var(--control-scale)); }
+  .face-container { width: calc(120px * var(--control-scale)); height: calc(120px * var(--control-scale)); }
+  .face-btn { width: calc(44px * var(--control-scale)); height: calc(44px * var(--control-scale)); font-size: calc(0.8rem * var(--control-scale)); }
+  .pill-btn { height: 26px; padding: 0 16px; font-size: 0.6rem; }
 
   .menu-toggle {
     position: fixed; top: 16px; right: 16px;
     bottom: auto; left: auto; transform: none;
-    width: 40px; height: 40px; border-radius: 50%;
+    width: 38px; height: 38px; border-radius: 50%;
+    background: rgba(30, 33, 40, 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
   }
+  .menu-toggle:hover { background: rgba(40, 44, 52, 0.9); }
   .menu-toggle.open { transform: rotate(90deg); }
-  .menu-toggle svg { width: 18px; height: 18px; }
+  .menu-toggle svg { width: 16px; height: 16px; }
 
-  .status-text { font-size: 0.6rem; }
+  .status-text { font-size: 0.58rem; }
   .welcome-title { font-size: 1.3rem; }
-  .welcome-sub { font-size: 0.72rem; }
+  .welcome-sub { font-size: 0.7rem; }
   .welcome-btn { padding: 12px 32px; font-size: 0.9rem; }
   .welcome-actions { max-width: 260px; }
+
+  /* Bezel refinements for desktop */
+  .screen-bezel { border-color: rgba(255, 255, 255, 0.05); }
+  .screen-bezel::after {
+    box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.7);
+  }
 }
 
-/* ── Extra-large screens ── */
+/* ── Extra-large screens (1200px+) — slightly more generous ── */
 @media (min-width: 1200px) {
-  .dsi-shell { max-width: 820px; margin: 24px auto; height: calc(100dvh - 48px); }
-  .top-shell { border-radius: 24px 24px 2px 2px; padding: 0 36px 12px; }
-  .top-shell .screen-bezel { max-width: min(500px, calc((42dvh - 40px) * 4 / 3)); }
-  .bottom-shell { border-radius: 2px 2px 24px 24px; padding: 20px 32px 18px; gap: 10px 20px; }
-  .bottom-screen-wrapper .screen-bezel { width: min(400px, calc((35dvh - 40px) * 4 / 3)); max-width: min(400px, calc((35dvh - 40px) * 4 / 3)); }
-  .dpad-container { width: calc(150px * var(--control-scale)); height: calc(150px * var(--control-scale)); }
-  .face-container { width: calc(150px * var(--control-scale)); height: calc(150px * var(--control-scale)); }
-  .face-btn { width: calc(54px * var(--control-scale)); height: calc(54px * var(--control-scale)); }
+  :root {
+    --screen-w: min(500px, calc((100dvh - 170px) / 1.5));
+  }
+
+  .dsi-shell { max-width: calc(var(--screen-w) + 350px); margin: 20px auto; height: calc(100dvh - 40px); }
+  .top-shell { border-radius: 22px 22px 2px 2px; padding: 0 24px 10px; }
+  .bottom-shell { border-radius: 2px 2px 22px 22px; padding: 14px 20px 14px; gap: 6px 14px; }
+
+  .dpad-container { width: calc(130px * var(--control-scale)); height: calc(130px * var(--control-scale)); }
+  .face-container { width: calc(130px * var(--control-scale)); height: calc(130px * var(--control-scale)); }
+  .face-btn { width: calc(48px * var(--control-scale)); height: calc(48px * var(--control-scale)); }
+  .pill-btn { height: 28px; padding: 0 18px; }
 }
 
 /* ========================================

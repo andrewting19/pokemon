@@ -52,6 +52,7 @@ export function useEmulator() {
   const autoFetchAttemptedRef = useRef(false)
   const sdkReadyRef = useRef(sdkReady)
   const storageReadyRef = useRef(storageReady)
+  const startBufferRef = useRef<(fileName: string, fileSize: number, fileData: Uint8Array) => Promise<void>>(null!)
   sdkReadyRef.current = sdkReady
   storageReadyRef.current = storageReady
 
@@ -300,14 +301,14 @@ export function useEmulator() {
       const decompressedBlob = await new Response(decompressed).blob()
       const romData = new Uint8Array(await decompressedBlob.arrayBuffer())
 
-      await startBuffer(BUNDLED_ROM_NAME, romData.byteLength, romData)
+      await startBufferRef.current!(BUNDLED_ROM_NAME, romData.byteLength, romData)
     } catch (caught) {
       const message = caught instanceof Error ? caught.message : 'ROM download failed'
       setError(message)
       setStatus('Could not auto-load ROM. Use the menu to import manually.')
       setRomDownloadProgress(null)
     }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     const handleBlur = () => {
@@ -410,6 +411,8 @@ export function useEmulator() {
       setStatus('The session could not be started.')
     }
   }
+
+  startBufferRef.current = startBuffer
 
   const start = async (file: File) => {
     const fileData = new Uint8Array(await file.arrayBuffer())

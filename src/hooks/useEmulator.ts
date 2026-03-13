@@ -264,10 +264,7 @@ export function useEmulator() {
     }
   }, [setTransientSaveBanner])
 
-  const fetchBundledRom = useCallback(async () => {
-    if (autoFetchAttemptedRef.current) return
-    autoFetchAttemptedRef.current = true
-
+  const fetchBundledRom = async () => {
     try {
       setStatus('Downloading Pokemon Platinum...')
       setRomDownloadProgress(0)
@@ -301,7 +298,6 @@ export function useEmulator() {
       const decompressedBlob = await new Response(decompressed).blob()
       const romData = new Uint8Array(await decompressedBlob.arrayBuffer())
 
-      console.log('[fetchBundledRom] download+decompress done, calling startBufferRef, ref exists:', !!startBufferRef.current)
       await startBufferRef.current!(BUNDLED_ROM_NAME, romData.byteLength, romData)
     } catch (caught) {
       const message = caught instanceof Error ? caught.message : 'ROM download failed'
@@ -309,7 +305,7 @@ export function useEmulator() {
       setStatus('Could not auto-load ROM. Use the menu to import manually.')
       setRomDownloadProgress(null)
     }
-  }, [])
+  }
 
   useEffect(() => {
     const handleBlur = () => {
@@ -346,7 +342,6 @@ export function useEmulator() {
     try {
       setError(null)
 
-      console.log('[startBuffer] sdkReady:', sdkReadyRef.current, 'storageReady:', storageReadyRef.current)
       if (!sdkReadyRef.current || !storageReadyRef.current) {
         throw new Error('The runtime is still preparing.')
       }
@@ -516,10 +511,10 @@ export function useEmulator() {
   useEffect(() => {
     if (!sdkReady || !storageReady || running) return
     if (autoFetchAttemptedRef.current) return
+    autoFetchAttemptedRef.current = true
 
     // If there's a cached ROM, resume it
     if (rememberedRom) {
-      autoFetchAttemptedRef.current = true
       void resumeRememberedRom()
       return
     }
@@ -528,7 +523,6 @@ export function useEmulator() {
     const params = new URLSearchParams(window.location.search)
     const romUrl = params.get('romUrl')
     if (romUrl) {
-      autoFetchAttemptedRef.current = true
       const romName = params.get('romName') ?? undefined
       void startFromUrl(romUrl, romName)
       return
@@ -536,7 +530,7 @@ export function useEmulator() {
 
     // Otherwise, download the bundled ROM
     void fetchBundledRom()
-  }, [sdkReady, storageReady, running, rememberedRom, fetchBundledRom, resumeRememberedRom, startFromUrl])
+  }, [sdkReady, storageReady]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const forgetRememberedRom = async () => {
     if (!rememberedRom) {

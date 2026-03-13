@@ -301,6 +301,7 @@ export function useEmulator() {
       const decompressedBlob = await new Response(decompressed).blob()
       const romData = new Uint8Array(await decompressedBlob.arrayBuffer())
 
+      console.log('[fetchBundledRom] download+decompress done, calling startBufferRef, ref exists:', !!startBufferRef.current)
       await startBufferRef.current!(BUNDLED_ROM_NAME, romData.byteLength, romData)
     } catch (caught) {
       const message = caught instanceof Error ? caught.message : 'ROM download failed'
@@ -345,6 +346,7 @@ export function useEmulator() {
     try {
       setError(null)
 
+      console.log('[startBuffer] sdkReady:', sdkReadyRef.current, 'storageReady:', storageReadyRef.current)
       if (!sdkReadyRef.current || !storageReadyRef.current) {
         throw new Error('The runtime is still preparing.')
       }

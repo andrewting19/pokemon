@@ -92,7 +92,7 @@ export async function randomizeRom({
     const mountedSourcePath = `/str/${sourceFileName}`
     const workingSourcePath = `/files/${sourceFileName}`
     const outputPath = `/files/${outputFileName}`
-    const settingsPath = `/str/${presetConfig.id}.rnqs`
+    const settingsPath = `/str/settings/${presetConfig.id}.rnqs`
 
     onStatus?.(`Applying ${presetConfig.label}...`)
     onStatus?.('Loading preset settings...')

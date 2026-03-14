@@ -97,10 +97,9 @@ export function applyTogglesToSettings(base64Settings: string, toggles: Randomiz
   const data = new Uint8Array(raw.length)
   data.set(raw)
 
-  // Find data length (total minus ROM name and checksum trailer)
-  // The ROM name starts after the settings data bytes, preceded by a 1-byte length.
-  // We know the data portion is 51 bytes for v322.
-  const dataLength = findDataLength(data)
+  // The migrated base64 includes settings bytes + ROM name + 8-byte checksum trailer.
+  // CRC32 covers everything except the last 8 bytes.
+  const dataLength = data.length
 
   // Starters (byte 4): clear mode bits 0-3, set desired mode, preserve sub-flags in bits 4-7
   const starterSubFlags = data[STARTERS_BYTE] & 0xf0
@@ -209,17 +208,6 @@ export function applyTogglesToSettings(base64Settings: string, toggles: Randomiz
   writeFullIntBigEndian(data, dataLength - 8, checksum)
 
   return btoa(String.fromCharCode(...data))
-}
-
-function findDataLength(data: Uint8Array): number {
-  // After the 51 settings bytes, there's a 1-byte ROM name length + the name + 8 bytes (CRC32 + customNames checksum).
-  // ROM name starts at byte 51: data[51] = name length, then the name, then 8 bytes of checksums.
-  if (data.length <= 51) {
-    return data.length
-  }
-
-  const nameLength = data[51]
-  return 51 + 1 + nameLength + 8
 }
 
 export function loadSavedToggles(): RandomizerToggles {

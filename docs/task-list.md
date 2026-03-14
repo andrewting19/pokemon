@@ -44,6 +44,10 @@
 - [ ] Tune thumb-control ergonomics for portrait and landscape play.
 - [x] Add configurable control opacity/size and reduce accidental edge touches.
 - [x] Add “remember last ROM on this device” and resume-last-session UX.
+- [x] Add launch-mode buttons for bundled vanilla Platinum, randomized bundled Platinum, and manual ROM import.
+- [x] Allow D-pad direction changes by dragging a held touch across the control instead of forcing a lift/re-press.
+- [x] Suppress accidental button/label text selection and touch callouts on mobile controls.
+- [ ] Verify the browser-side Platinum randomizer flow end-to-end and confirm randomized ROM boot succeeds on a clean browser profile.
 - [ ] Verify PWA offline boot, background/resume behavior, and storage retention.
 - [ ] Check audio unlock and mute-switch behavior on iPhone.
 - [ ] Check battery/thermal impact during longer sessions.

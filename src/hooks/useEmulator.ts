@@ -18,6 +18,7 @@ import {
   syncStorage,
   writeVirtualFile,
 } from '../lib/emulator'
+import { randomizeRom, type RandomizerPresetId } from '../lib/randomizer'
 import type { RememberedRom } from '../lib/emulator'
 
 type ScreenFocus = 'top' | 'bottom'
@@ -28,6 +29,7 @@ export interface SessionMeta {
   fileSize: number
   romPath: string
   savePath: string
+  sourceLabel: string
 }
 
 const BUNDLED_ROM_URL = 'https://pub-96d84523d8a341b79c022b2a33f1c324.r2.dev/pokemon-platinum.nds.gz'
@@ -37,6 +39,7 @@ export function useEmulator() {
   const [sdkReady, setSdkReady] = useState(isRuntimeLoaded())
   const [storageReady, setStorageReady] = useState(false)
   const [running, setRunning] = useState(false)
+  const [launching, setLaunching] = useState(false)
   const [paused, setPaused] = useState(false)
   const [fastForward, setFastForward] = useState(false)
   const [screenFocus, setScreenFocus] = useState<ScreenFocus>('top')
@@ -49,7 +52,7 @@ export function useEmulator() {
   const saveBannerTimeout = useRef<number | null>(null)
   const bootstrappedRef = useRef(false)
   const pointerBridgeCleanupRef = useRef<(() => void) | null>(null)
-  const autoFetchAttemptedRef = useRef(false)
+  const autoResumeAttemptedRef = useRef(false)
   const sdkReadyRef = useRef(sdkReady)
   const storageReadyRef = useRef(storageReady)
   const startBufferRef = useRef<(fileName: string, fileSize: number, fileData: Uint8Array) => Promise<void>>(null!)
@@ -235,7 +238,7 @@ export function useEmulator() {
             clearRememberedRom()
           }
           setStorageReady(true)
-          setStatus('Runtime ready. Import a DS ROM to begin.')
+          setStatus('Runtime ready. Choose a play mode.')
         })
         .catch(() => {
           setError('Browser storage could not be prepared.')
@@ -264,7 +267,7 @@ export function useEmulator() {
     }
   }, [setTransientSaveBanner])
 
-  const fetchBundledRom = async () => {
+  const fetchBundledRomBuffer = async () => {
     try {
       setStatus('Downloading Pokemon Platinum...')
       setRomDownloadProgress(0)
@@ -296,13 +299,14 @@ export function useEmulator() {
       const ds = new DecompressionStream('gzip')
       const decompressed = compressed.stream().pipeThrough(ds)
       const decompressedBlob = await new Response(decompressed).blob()
-      const romData = new Uint8Array(await decompressedBlob.arrayBuffer())
-
-      await startBufferRef.current!(BUNDLED_ROM_NAME, romData.byteLength, romData)
+      return new Uint8Array(await decompressedBlob.arrayBuffer())
     } catch (caught) {
       const message = caught instanceof Error ? caught.message : 'ROM download failed'
       setError(message)
-      setStatus('Could not auto-load ROM. Use the menu to import manually.')
+      setStatus('Could not prepare Pokemon Platinum. Use the menu to import manually.')
+      setRomDownloadProgress(null)
+      throw caught
+    } finally {
       setRomDownloadProgress(null)
     }
   }
@@ -349,7 +353,12 @@ export function useEmulator() {
     setStatus('Session ended. Import another ROM when ready.')
   }
 
-  const startBuffer = async (fileName: string, fileSize: number, fileData: Uint8Array) => {
+  const startBuffer = async (
+    fileName: string,
+    fileSize: number,
+    fileData: Uint8Array,
+    sourceLabel = 'Imported ROM',
+  ) => {
     try {
       setError(null)
 
@@ -404,6 +413,7 @@ export function useEmulator() {
         fileSize,
         romPath,
         savePath,
+        sourceLabel,
       })
       const cachedRom = { fileName, fileSize, romPath }
       saveRememberedRom(cachedRom)
@@ -426,7 +436,7 @@ export function useEmulator() {
 
   const start = async (file: File) => {
     const fileData = new Uint8Array(await file.arrayBuffer())
-    await startBuffer(file.name, file.size, fileData)
+    await startBuffer(file.name, file.size, fileData, 'Imported ROM')
   }
 
   const startFromUrl = useCallback(async (url: string, fileName?: string) => {
@@ -442,8 +452,50 @@ export function useEmulator() {
       url.split('/').pop()?.split('?')[0] ||
       'remote.nds'
 
-    await startBuffer(resolvedName, fileData.byteLength, fileData)
+    await startBuffer(resolvedName, fileData.byteLength, fileData, 'Remote ROM')
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const startBundledRom = async () => {
+    setLaunching(true)
+    try {
+      setError(null)
+      const romData = await fetchBundledRomBuffer()
+      await startBuffer(BUNDLED_ROM_NAME, romData.byteLength, romData, 'Bundled Pokemon Platinum')
+    } catch (caught) {
+      const message = caught instanceof Error ? caught.message : 'Bundled ROM startup failed.'
+      setError(message)
+      setStatus('The bundled cartridge could not be started.')
+    } finally {
+      setLaunching(false)
+    }
+  }
+
+  const startBundledRandomizedRom = async (preset: RandomizerPresetId) => {
+    setLaunching(true)
+    try {
+      setError(null)
+      const baseRom = await fetchBundledRomBuffer()
+      setStatus('Initializing the Pokemon randomizer...')
+      const randomized = await randomizeRom({
+        romData: baseRom,
+        romName: BUNDLED_ROM_NAME,
+        preset,
+        onStatus: setStatus,
+      })
+      await startBuffer(
+        randomized.fileName,
+        randomized.fileData.byteLength,
+        randomized.fileData,
+        randomized.presetLabel,
+      )
+    } catch (caught) {
+      const message = caught instanceof Error ? caught.message : 'Randomizer startup failed.'
+      setError(message)
+      setStatus('The randomized run could not be started.')
+    } finally {
+      setLaunching(false)
+    }
+  }
 
   const togglePause = () => {
     if (!window.WebMelon?.emulator.hasEmulator()) {
@@ -517,32 +569,26 @@ export function useEmulator() {
     }
 
     const romData = readVirtualFile(rememberedRom.romPath)
-    await startBuffer(rememberedRom.fileName, rememberedRom.fileSize, romData)
+    await startBuffer(rememberedRom.fileName, rememberedRom.fileSize, romData, 'Cached ROM')
   }, [rememberedRom]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-load ROM when ready: cached ROM > URL param > bundled download
+  // Auto-resume only when we already have a concrete source: cached ROM or explicit URL.
   useEffect(() => {
     if (!sdkReady || !storageReady || running) return
-    if (autoFetchAttemptedRef.current) return
-    autoFetchAttemptedRef.current = true
+    if (autoResumeAttemptedRef.current) return
+    autoResumeAttemptedRef.current = true
 
-    // If there's a cached ROM, resume it
     if (rememberedRom) {
       void resumeRememberedRom()
       return
     }
 
-    // If URL params specify a ROM, use that
     const params = new URLSearchParams(window.location.search)
     const romUrl = params.get('romUrl')
     if (romUrl) {
       const romName = params.get('romName') ?? undefined
       void startFromUrl(romUrl, romName)
-      return
     }
-
-    // Otherwise, download the bundled ROM
-    void fetchBundledRom()
   }, [sdkReady, storageReady]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const forgetRememberedRom = async () => {
@@ -561,6 +607,7 @@ export function useEmulator() {
     sdkReady,
     storageReady,
     running,
+    launching,
     paused,
     fastForward,
     screenFocus,
@@ -577,6 +624,8 @@ export function useEmulator() {
     toggleFastForward,
     exportSave,
     importSave,
+    startBundledRom,
+    startBundledRandomizedRom,
     startFromUrl,
     resumeRememberedRom,
     forgetRememberedRom,

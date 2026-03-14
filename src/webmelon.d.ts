@@ -144,6 +144,24 @@ declare global {
 
   interface Window {
     WebMelon?: WebMelonInterface
+    cheerpjInit?: () => Promise<void>
+    cheerpjCreateDisplay?: (width: number, height: number, element: Element) => void
+    cheerpjRunJar?: (...args: string[]) => void
+    cheerpjRunStaticMethod?: (
+      thread: unknown,
+      className: string,
+      methodName: string,
+      ...args: unknown[]
+    ) => Promise<unknown>
+    cheerpjRunMain?: (mainClass: string, classpath: string, ...args: string[]) => Promise<number>
+    cheerpOSAddStringFile?: (path: string, data: Uint8Array) => Promise<void>
+    cheerpjAddStringFile?: (path: string, data: Uint8Array) => Promise<void>
+    cjC?: (className: string) => unknown
+    cjNew?: (className: string, ...args: unknown[]) => Promise<unknown>
+    cjCall?: (objOrClassName: unknown, methodName: string, ...args: unknown[]) => Promise<unknown>
+    cjStringJsToJava?: (value: string) => unknown
+    cjFileBlob?: (path: string) => Promise<Blob>
+    threads?: unknown[]
     FS?: {
       analyzePath: (path: string) => { exists: boolean }
       readFile: (path: string, opts?: { encoding?: string }) => Uint8Array

@@ -19,11 +19,13 @@ npm run build
 ## Important Files
 
 - `src/App.tsx`
-  Product shell, launch flow, UI state for control tuning, cached-ROM actions.
+  Product shell, launch mode picker, UI state for control tuning, cached-ROM actions.
 - `src/hooks/useEmulator.ts`
-  Runtime lifecycle, ROM boot logic, pointer bridge, save import/export, cached-ROM resume/forget logic.
+  Runtime lifecycle, ROM boot logic, bundled-ROM fetch/randomizer flow, save import/export, cached-ROM resume/forget logic.
 - `src/lib/emulator.ts`
   Runtime helpers, IDBFS sync, ROM validation, virtual filesystem helpers, remembered-ROM metadata.
+- `src/lib/randomizer.ts`
+  Browser-side Universal Pokemon Randomizer bridge and preset definitions.
 - `src/index.css`
   Full visual system and mobile layout.
 - `docs/implementation-plan.md`
@@ -33,10 +35,14 @@ npm run build
 
 ## Current Behavior
 
+- On first load, the app prepares storage and lets the user choose a launch mode instead of auto-booting immediately.
+- `Play Vanilla` downloads the bundled `Pokemon Platinum` ROM from Cloudflare, boots it, and caches it on-device for resume.
+- Randomizer launch buttons are intended to generate a fresh bundled Platinum ROM in-browser before boot.
 - ROMs can be imported from file input.
 - Imported ROMs are cached in IndexedDB-backed `/roms` storage for later resume on the same device.
 - Saves live in `/savefiles` and can be exported/imported manually.
 - Bottom-screen input uses an app-side pointer bridge instead of the runtime’s older mouse/touch listeners.
+- The D-pad supports drag retargeting, so one touch can slide between directions without lifting.
 - Keyboard defaults are remapped for sanity:
   - arrows = D-pad
   - `Z` = A
@@ -54,6 +60,7 @@ npm run build
   - this assumes the ROM is being served locally by the developer; do not commit a `public/roms` symlink or copied local assets
 - Real Platinum boot/input has been validated in-browser.
 - Still explicitly unverified enough to keep on the todo list:
+  - randomized Platinum generation and boot path
   - real save creation plus `.sav` round-trip
   - physical iPhone and Android testing
   - battery/thermal behavior

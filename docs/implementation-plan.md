@@ -11,8 +11,9 @@ We are not porting the game. We are building a web shell around a browser-compat
 - Emulator core: vendor the published `ds-anywhere` runtime assets (`wasmemulator.js`, `wasmemulator.wasm`, `webmelon.js`) locally for reproducible builds and offline caching.
 - Frontend stack: `Vite + React + TypeScript` to keep iteration fast while giving us enough structure for emulator state, controls, save UX, and PWA support.
 - Storage model:
-  - ROMs are loaded through the browser file picker and into the virtual filesystem at runtime.
-  - Save files are persisted in `IndexedDB` via the emulator's `IDBFS` bridge.
+- ROMs are loaded through the browser file picker and into the virtual filesystem at runtime.
+- Bundled launch modes may also fetch a known Platinum ROM from remote storage before booting or randomizing locally.
+- Save files are persisted in `IndexedDB` via the emulator's `IDBFS` bridge.
   - Save export/import is handled manually so users can back up progress outside browser storage.
 - Delivery: PWA-enabled build so the app is installable on phone home screens and can keep emulator assets available offline.
 
@@ -40,6 +41,7 @@ For this project, `ds-anywhere` is the better implementation target because:
 - Bottom-screen touch interaction
 - Pause, resume, fast-forward
 - Save persistence and save export/import
+- Bundled Platinum launch plus browser-side randomized Platinum presets
 - Installable PWA
 - Legal-safe messaging around user-supplied dumps only
 
@@ -84,12 +86,14 @@ The UI should feel like a portable field kit rather than a generic emulator dash
 
 - Build a fixed dual-canvas stage
 - Start emulation only after a user gesture and ROM load
+- Offer explicit launch modes for bundled vanilla Platinum, bundled randomized Platinum, or manual ROM import
 - Add pause/resume and fast-forward actions
 - Support swapping which screen is visually prioritized
 
 ### 4. Mobile Controls
 
 - Thumb-friendly D-pad cluster
+- Drag-retargeted D-pad input so one held touch can slide between directions
 - A/B/X/Y cluster
 - Start/Select/L/R utility buttons
 - Pointer-safe press/release handling
@@ -107,6 +111,8 @@ The UI should feel like a portable field kit rather than a generic emulator dash
 - Build and lint locally
 - Run the app in Playwright with a phone-sized viewport
 - Verify runtime loading, storage initialization, and mobile layout behavior
+- Verify bundled vanilla launch still boots cleanly after the explicit mode-picker change
+- Verify randomized launch can produce a bootable `.nds` on the actual preview/deploy route
 - Verify import/export workflows with synthetic save data when game validation is not possible
 
 ## Risks and Mitigations
@@ -129,6 +135,12 @@ Risk: some control features require access to `WebMelon` internals not exposed i
 
 Mitigation: isolate those accesses in one adapter module so we can swap them if the runtime changes.
 
+### Browser Randomizer Runtime
+
+Risk: CheerpJ pathing, IndexedDB-backed file extraction, and base-path behavior can diverge between dev and preview/deploy environments.
+
+Mitigation: keep the browser randomizer isolated in one adapter, vendor the jar assets locally, and explicitly verify randomized launch on a clean preview/deploy route.
+
 ### Full Game Validation
 
 Risk: we cannot keep real game ROMs in the repository for testing.
@@ -142,6 +154,8 @@ The project is complete when:
 - the app builds cleanly;
 - the runtime loads locally from vendored assets;
 - a user can import a DS ROM and boot the emulator;
+- a user can launch bundled vanilla Platinum from the mode picker;
+- a randomized Platinum preset can generate and boot without manual file juggling;
 - on-screen controls work for normal gameplay input;
 - bottom-screen touch interaction works;
 - save files persist and can be exported/imported;

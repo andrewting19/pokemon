@@ -2,6 +2,7 @@ import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useEmulator } from './hooks/useEmulator'
 import { formatBytes, pressButton, releaseButton, type DsButton } from './lib/emulator'
+import { RANDOMIZER_PRESETS } from './lib/randomizer'
 
 /* ── Inline SVG icons ── */
 
@@ -45,6 +46,108 @@ function GameButton({
     >
       {label}
     </button>
+  )
+}
+
+function DpadCluster() {
+  const [activeButton, setActiveButton] = useState<DsButton | null>(null)
+  const activePointerIdRef = useRef<number | null>(null)
+  const currentButtonRef = useRef<DsButton | null>(null)
+
+  const releaseActive = () => {
+    if (currentButtonRef.current) {
+      releaseButton(currentButtonRef.current)
+      currentButtonRef.current = null
+    }
+    activePointerIdRef.current = null
+    setActiveButton(null)
+  }
+
+  const resolveDirection = (event: ReactPointerEvent<HTMLDivElement>): DsButton | null => {
+    const rect = event.currentTarget.getBoundingClientRect()
+    const x = event.clientX - rect.left
+    const y = event.clientY - rect.top
+    const dx = x - rect.width / 2
+    const dy = y - rect.height / 2
+    const deadZone = Math.min(rect.width, rect.height) * 0.12
+
+    if (Math.abs(dx) < deadZone && Math.abs(dy) < deadZone) {
+      return currentButtonRef.current
+    }
+
+    if (Math.abs(dx) > Math.abs(dy)) {
+      return dx >= 0 ? 'DPAD_RIGHT' : 'DPAD_LEFT'
+    }
+
+    return dy >= 0 ? 'DPAD_DOWN' : 'DPAD_UP'
+  }
+
+  const setDirection = (nextButton: DsButton | null) => {
+    if (nextButton === currentButtonRef.current) {
+      return
+    }
+
+    if (currentButtonRef.current) {
+      releaseButton(currentButtonRef.current)
+    }
+
+    if (nextButton) {
+      pressButton(nextButton)
+    }
+
+    currentButtonRef.current = nextButton
+    setActiveButton(nextButton)
+  }
+
+  const onPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    event.preventDefault()
+    activePointerIdRef.current = event.pointerId
+    event.currentTarget.setPointerCapture(event.pointerId)
+    setDirection(resolveDirection(event))
+  }
+
+  const onPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (activePointerIdRef.current !== event.pointerId) {
+      return
+    }
+
+    event.preventDefault()
+    setDirection(resolveDirection(event))
+  }
+
+  const onPointerEnd = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (activePointerIdRef.current !== event.pointerId) {
+      return
+    }
+
+    event.preventDefault()
+    releaseActive()
+  }
+
+  useEffect(() => {
+    return () => {
+      if (currentButtonRef.current) {
+        releaseButton(currentButtonRef.current)
+      }
+    }
+  }, [])
+
+  return (
+    <div
+      className={`dpad-container${activeButton ? ` active-${activeButton.toLowerCase().replace('dpad_', '')}` : ''}`}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerEnd}
+      onPointerCancel={onPointerEnd}
+      onPointerLeave={onPointerEnd}
+    >
+      <div className="dpad-cross" />
+      <div className="dpad-center" />
+      <div className="dpad-zone up" />
+      <div className="dpad-zone down" />
+      <div className="dpad-zone left" />
+      <div className="dpad-zone right" />
+    </div>
   )
 }
 
@@ -93,6 +196,7 @@ function App() {
     sdkReady,
     storageReady,
     running,
+    launching,
     paused,
     fastForward,
     status,
@@ -107,6 +211,8 @@ function App() {
     toggleFastForward,
     exportSave,
     importSave,
+    startBundledRom,
+    startBundledRandomizedRom,
     resumeRememberedRom,
     forgetRememberedRom,
   } = useEmulator()
@@ -131,6 +237,7 @@ function App() {
   const showSaveBanner = saveBanner !== 'No save activity yet.' && saveBanner !== 'Save storage is idle.'
 
   const showWelcome = !running
+  const canLaunch = sdkReady && storageReady && !launching && romDownloadProgress === null
 
   return (
     <main
@@ -161,7 +268,35 @@ function App() {
                   <div className="progress-label">Downloading... {romDownloadProgress}%</div>
                 </div>
               ) : (
-                <div className="welcome-sub">{status}</div>
+                <>
+                  <div className="welcome-sub">{status}</div>
+                  <div className="welcome-actions">
+                    <button
+                      className="welcome-btn"
+                      disabled={!canLaunch}
+                      onClick={() => void startBundledRom()}
+                    >
+                      Play Vanilla
+                    </button>
+                    {RANDOMIZER_PRESETS.map((preset) => (
+                      <button
+                        key={preset.id}
+                        className="welcome-btn ghost"
+                        disabled={!canLaunch}
+                        onClick={() => void startBundledRandomizedRom(preset.id)}
+                      >
+                        {preset.label}
+                      </button>
+                    ))}
+                    <button
+                      className="welcome-btn subtle"
+                      disabled={launching}
+                      onClick={() => romInputRef.current?.click()}
+                    >
+                      Import Your Own ROM
+                    </button>
+                  </div>
+                </>
               )}
             </div>
           )}
@@ -177,14 +312,7 @@ function App() {
       {/* ── Bottom clamshell half ── */}
       <div className="bottom-shell">
         <div className="dpad-section">
-          <div className="dpad-container">
-            <div className="dpad-cross" />
-            <div className="dpad-center" />
-            <GameButton button="DPAD_UP" label="" className="dpad-zone up" />
-            <GameButton button="DPAD_DOWN" label="" className="dpad-zone down" />
-            <GameButton button="DPAD_LEFT" label="" className="dpad-zone left" />
-            <GameButton button="DPAD_RIGHT" label="" className="dpad-zone right" />
-          </div>
+          <DpadCluster />
         </div>
 
         <div className="bottom-screen-wrapper">
@@ -247,6 +375,10 @@ function App() {
                 <span>Size</span>
                 <span>{formatBytes(session.fileSize)}</span>
               </div>
+              <div className="session-info-row">
+                <span>Mode</span>
+                <span>{session.sourceLabel}</span>
+              </div>
             </div>
           </div>
         )}
@@ -285,6 +417,23 @@ function App() {
           <div className="drawer-actions">
             <button
               className="drawer-btn primary"
+              disabled={launching}
+              onClick={() => void startBundledRom()}
+            >
+              Play Vanilla
+            </button>
+            {RANDOMIZER_PRESETS.map((preset) => (
+              <button
+                key={preset.id}
+                className="drawer-btn"
+                disabled={launching}
+                onClick={() => void startBundledRandomizedRom(preset.id)}
+              >
+                {preset.label}
+              </button>
+            ))}
+            <button
+              className="drawer-btn"
               onClick={() => romInputRef.current?.click()}
             >
               Import ROM

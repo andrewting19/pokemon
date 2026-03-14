@@ -464,7 +464,19 @@ function withTimeout<T>(promise: Promise<T> | T, timeoutMs: number, message: str
 }
 
 async function loadPresetSettings(path: string): Promise<Uint8Array> {
-  const response = await fetch(`${import.meta.env.BASE_URL}${path}`)
+  const controller = new AbortController()
+  const timeoutId = window.setTimeout(() => controller.abort(), 10000)
+  const basePath = `${import.meta.env.BASE_URL}${path}`.replace(/\/{2,}/g, '/')
+  const presetUrl = new URL(basePath, window.location.origin).toString()
+  const response = await fetch(
+    `${presetUrl}${presetUrl.includes('?') ? '&' : '?'}t=${Date.now()}`,
+    {
+      cache: 'no-store',
+      signal: controller.signal,
+    },
+  ).finally(() => {
+    window.clearTimeout(timeoutId)
+  })
   if (!response.ok) {
     throw new Error(`Could not load preset settings (${response.status}).`)
   }

@@ -62,9 +62,10 @@ canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; 
   min-height: 100%;
   min-height: 100dvh;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   padding: 28px 18px;
+  overflow-y: auto;
   background:
     radial-gradient(circle at top, rgba(79, 195, 247, 0.16), transparent 32%),
     linear-gradient(180deg, #171a1f 0%, #0f1217 100%);

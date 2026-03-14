@@ -388,7 +388,6 @@ function LauncherScreen({
   toggles,
   onToggleChange,
   onVanilla,
-  onRandomized,
   onCustomStart,
   onImportRom,
 }: {
@@ -399,7 +398,6 @@ function LauncherScreen({
   toggles: RandomizerToggles
   onToggleChange: (toggles: RandomizerToggles) => void
   onVanilla: () => void
-  onRandomized: (preset: RandomizerPresetId) => void
   onCustomStart: () => void
   onImportRom: (file: File) => void
 }) {
@@ -431,22 +429,12 @@ function LauncherScreen({
           <button className="welcome-btn" disabled={busy} onClick={onVanilla}>
             Play Vanilla
           </button>
-          {RANDOMIZER_PRESETS.map((preset) => (
-            <button
-              key={preset.id}
-              className="welcome-btn ghost"
-              disabled={busy}
-              onClick={() => onRandomized(preset.id)}
-            >
-              {preset.label}
-            </button>
-          ))}
           <button
             className="welcome-btn ghost"
             disabled={busy}
             onClick={() => setSettingsOpen(!settingsOpen)}
           >
-            {settingsOpen ? 'Hide Settings' : 'Customize & Play'}
+            {settingsOpen ? 'Hide Settings' : 'Randomize & Play'}
           </button>
           {settingsOpen ? (
             <SettingsPanel
@@ -1023,7 +1011,6 @@ function App() {
         toggles={randomizerToggles}
         onToggleChange={handleToggleChange}
         onVanilla={startVanillaLaunch}
-        onRandomized={(preset) => void startRandomizedLaunch(preset)}
         onCustomStart={() => void startCustomRandomizedLaunch()}
         onImportRom={(file) => void startImportedLaunch(file)}
       />

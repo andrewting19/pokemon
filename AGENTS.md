@@ -43,15 +43,13 @@ npm run build
 - Saves live in `/savefiles` and can be exported/imported manually.
 - Bottom-screen input uses an app-side pointer bridge instead of the runtime’s older mouse/touch listeners.
 - The D-pad supports drag retargeting, so one touch can slide between directions without lifting.
-- Keyboard defaults are remapped for sanity:
-  - arrows = D-pad
-  - `Z` = A
-  - `X` = B
-  - `A` = Y
-  - `S` = X
-  - `Q` / `W` = L / R
-  - `Enter` = Start
-  - `Shift` = Select
+- Keyboard controls support two layouts simultaneously:
+  - D-pad: arrows or `W` `A` `S` `D`
+  - A / B: `J` / `K`
+  - X / Y: `I` / `U`
+  - L / R: `Q` / `E`
+  - Start: `Enter`
+  - Select: `Shift`
 
 ## Testing Notes
 

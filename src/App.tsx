@@ -866,10 +866,10 @@ function EmulatorShell({
         <div className="drawer-section">
           <div className="drawer-label">Keyboard</div>
           <div className="session-info">
-            <div className="session-info-row"><span>D-pad</span><span>Arrow keys</span></div>
-            <div className="session-info-row"><span>A / B</span><span>Z / X</span></div>
-            <div className="session-info-row"><span>X / Y</span><span>S / A</span></div>
-            <div className="session-info-row"><span>L / R</span><span>Q / W</span></div>
+            <div className="session-info-row"><span>D-pad</span><span>Arrows / WASD</span></div>
+            <div className="session-info-row"><span>A / B</span><span>J / K</span></div>
+            <div className="session-info-row"><span>X / Y</span><span>I / U</span></div>
+            <div className="session-info-row"><span>L / R</span><span>Q / E</span></div>
             <div className="session-info-row"><span>Start</span><span>Enter</span></div>
             <div className="session-info-row"><span>Select</span><span>Shift</span></div>
           </div>

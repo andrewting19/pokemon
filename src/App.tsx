@@ -5,9 +5,9 @@ import {
   BUNDLED_ROM_NAME,
   fetchBundledRomBuffer,
   formatBytes,
-  loadRememberedRom,
   pressButton,
   releaseButton,
+  saveRememberedRom,
   type DsButton,
 } from './lib/emulator'
 import {
@@ -24,6 +24,13 @@ import {
   saveToggles,
   type RandomizerToggles,
 } from './lib/randomizerSettings'
+import {
+  deleteSession,
+  formatRelativeTime,
+  loadSessions,
+  migrateRememberedRom,
+  type GameSession,
+} from './lib/sessions'
 
 function GearIcon() {
   return (
@@ -388,6 +395,9 @@ function LauncherScreen({
   romDownloadProgress,
   toggles,
   onToggleChange,
+  sessions,
+  onContinueSession,
+  onDeleteSession,
   onVanilla,
   onCustomStart,
   onImportRom,
@@ -399,6 +409,9 @@ function LauncherScreen({
   romDownloadProgress: number | null
   toggles: RandomizerToggles
   onToggleChange: (toggles: RandomizerToggles) => void
+  sessions: GameSession[]
+  onContinueSession: (session: GameSession) => void
+  onDeleteSession: (session: GameSession) => void
   onVanilla: () => void
   onCustomStart: () => void
   onImportRom: (file: File) => void
@@ -427,6 +440,30 @@ function LauncherScreen({
 
         <div className="launcher-status">{status}</div>
         {error ? <div className="error-toast launcher-error">{error}</div> : null}
+
+        {sessions.length > 0 ? (
+          <div className="session-list">
+            {sessions.map((session) => (
+              <div key={session.id} className="session-card">
+                <div className="session-card-header">
+                  <div className="session-card-name">{session.name}</div>
+                  <div className="session-card-time">{formatRelativeTime(session.lastPlayedAt)}</div>
+                </div>
+                <div className="session-card-meta">{session.sourceLabel}</div>
+                <div className="session-card-actions">
+                  <button className="session-card-btn primary" disabled={busy} onClick={() => onContinueSession(session)}>
+                    Continue
+                  </button>
+                  <button className="session-card-btn danger" disabled={busy} onClick={() => onDeleteSession(session)}>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : null}
+
+        <div className="launcher-divider">Start New</div>
 
         <div className="launcher-actions">
           <button className="welcome-btn" disabled={busy} onClick={onVanilla}>
@@ -508,7 +545,6 @@ function EmulatorShell({
     error,
     saveBanner,
     session,
-    rememberedRom,
     romDownloadProgress,
     start,
     stop,
@@ -518,8 +554,6 @@ function EmulatorShell({
     importSave,
     startBundledRom,
     startPreparedRom,
-    resumeRememberedRom,
-    forgetRememberedRom,
   } = useEmulator({ disableAutoResume: Boolean(initialBoot) })
 
   useEffect(() => {
@@ -736,12 +770,6 @@ function EmulatorShell({
             <button className="drawer-btn" onClick={() => romInputRef.current?.click()}>
               Import ROM
             </button>
-            <button className="drawer-btn" disabled={!rememberedRom || running} onClick={() => resumeRememberedRom()}>
-              Resume Cached
-            </button>
-            <button className="drawer-btn danger" disabled={!rememberedRom} onClick={() => void forgetRememberedRom()}>
-              Forget Cached
-            </button>
           </div>
         </div>
 
@@ -838,9 +866,26 @@ function App() {
   const [romDownloadProgress, setRomDownloadProgress] = useState<number | null>(null)
   const [randomizerToggles, setRandomizerToggles] = useState<RandomizerToggles>(loadSavedToggles)
   const [initialSettingsOpen, setInitialSettingsOpen] = useState(false)
+  const [sessions, setSessions] = useState<GameSession[]>([])
+
+  const refreshSessions = () => {
+    setSessions(loadSessions())
+  }
+
+  const handleContinueSession = (session: GameSession) => {
+    saveRememberedRom({ fileName: session.fileName, fileSize: session.fileSize, romPath: session.romPath })
+    setPendingBoot(null)
+    setMode('emulator')
+  }
+
+  const handleDeleteSession = async (session: GameSession) => {
+    deleteSession(session.id)
+    refreshSessions()
+  }
 
   const returnToLauncher = () => {
     setInitialSettingsOpen(true)
+    refreshSessions()
     setMode('launcher')
     setStatus('Choose a play mode.')
     setError(null)
@@ -868,13 +913,8 @@ function App() {
           return
         }
 
-        const cached = loadRememberedRom()
-        if (cached) {
-          setStatus('Resuming cached session...')
-          setMode('emulator')
-          return
-        }
-
+        migrateRememberedRom()
+        refreshSessions()
         setStatus('Choose a play mode.')
         setMode('launcher')
       } catch (caught) {
@@ -979,6 +1019,9 @@ function App() {
         romDownloadProgress={romDownloadProgress}
         toggles={randomizerToggles}
         onToggleChange={handleToggleChange}
+        sessions={sessions}
+        onContinueSession={handleContinueSession}
+        onDeleteSession={(s) => void handleDeleteSession(s)}
         onVanilla={startVanillaLaunch}
         onCustomStart={() => void startCustomRandomizedLaunch()}
         onImportRom={(file) => void startImportedLaunch(file)}

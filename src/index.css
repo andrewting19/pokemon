@@ -652,6 +652,36 @@ canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; 
 .segment-btn.active { background: var(--accent-dim); color: var(--accent); }
 .segment-btn:disabled { opacity: 0.4; cursor: default; }
 
+/* Session cards */
+.session-list { display: flex; flex-direction: column; gap: 8px; width: 100%; margin-bottom: 8px; }
+.session-card {
+  padding: 12px 14px; border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  text-align: left;
+}
+.session-card-header { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.session-card-name { font-size: 0.85rem; font-weight: 600; color: var(--text); }
+.session-card-time { font-size: 0.68rem; color: var(--text-muted); white-space: nowrap; }
+.session-card-meta { font-size: 0.72rem; color: var(--text-dim); margin-top: 2px; }
+.session-card-actions { display: flex; gap: 6px; margin-top: 8px; }
+.session-card-btn {
+  padding: 5px 14px; border-radius: 8px; border: none;
+  font-size: 0.72rem; font-weight: 600; cursor: pointer;
+  font-family: var(--font-ui); transition: all 0.15s ease;
+}
+.session-card-btn.primary { background: var(--accent); color: #111; }
+.session-card-btn.primary:hover { background: #6dd0fa; }
+.session-card-btn.danger { background: rgba(255, 255, 255, 0.06); color: var(--text-dim); }
+.session-card-btn.danger:hover { background: rgba(239, 83, 80, 0.2); color: #ef5350; }
+.session-card-btn:disabled { opacity: 0.4; cursor: default; }
+.launcher-divider {
+  width: 100%; text-align: center; font-size: 0.68rem; font-weight: 600;
+  color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.12em;
+  margin: 12px 0 4px; padding: 8px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
 /* Download progress bar */
 .download-progress { width: 100%; max-width: 220px; margin-top: 8px; }
 .progress-bar { width: 100%; height: 4px; background: var(--shell-light); border-radius: 2px; overflow: hidden; }

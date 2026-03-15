@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   BUNDLED_ROM_NAME,
   clearRememberedRom,
-  deleteVirtualFile,
   deriveRomPath,
   deriveSavePath,
   ensureWebMelonRuntime,
@@ -22,6 +21,7 @@ import {
   writeVirtualFile,
 } from '../lib/emulator'
 import type { RememberedRom } from '../lib/emulator'
+import { createSession } from '../lib/sessions'
 
 export interface SessionMeta {
   gameTitle: string
@@ -388,6 +388,7 @@ export function useEmulator({ disableAutoResume = false }: { disableAutoResume?:
       const cachedRom = { fileName, fileSize, romPath }
       saveRememberedRom(cachedRom)
       setRememberedRom(cachedRom)
+      createSession(fileName, fileSize, sourceLabel)
       setRunning(true)
       setPaused(false)
       setFastForward(false)
@@ -557,18 +558,6 @@ export function useEmulator({ disableAutoResume = false }: { disableAutoResume?:
     }
   }, [disableAutoResume, sdkReady, storageReady]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const forgetRememberedRom = async () => {
-    if (!rememberedRom) {
-      return
-    }
-
-    deleteVirtualFile(rememberedRom.romPath)
-    clearRememberedRom()
-    setRememberedRom(null)
-    await syncStorage(false)
-    setTransientSaveBanner('Cached ROM removed from this device.')
-  }
-
   useEffect(() => {
     return () => {
       clearSaveTimer()
@@ -593,7 +582,6 @@ export function useEmulator({ disableAutoResume = false }: { disableAutoResume?:
     error,
     saveBanner,
     session,
-    rememberedRom,
     romDownloadProgress,
     start,
     stop,
@@ -603,7 +591,5 @@ export function useEmulator({ disableAutoResume = false }: { disableAutoResume?:
     importSave,
     startBundledRom,
     startPreparedRom,
-    resumeRememberedRom,
-    forgetRememberedRom,
   }
 }

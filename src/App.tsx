@@ -421,76 +421,111 @@ function LauncherScreen({
   const [settingsOpen, setSettingsOpen] = useState(initialSettingsOpen)
 
   return (
-    <main className="launcher-shell">
-      <div className="launcher-panel">
-        <div className="launcher-kicker">Platinum Web</div>
-        <h1 className="launcher-title">Pokemon Platinum in your browser</h1>
-        <p className="launcher-copy">
-          Vanilla boots directly. Randomized runs are generated first, then reopened in a clean emulator session.
-        </p>
-
-        {romDownloadProgress !== null ? (
-          <div className="download-progress">
-            <div className="progress-bar">
-              <div className="progress-fill" style={{ width: `${romDownloadProgress}%` }} />
-            </div>
-            <div className="progress-label">Downloading... {romDownloadProgress}%</div>
-          </div>
-        ) : null}
-
-        <div className="launcher-status">{status}</div>
-        {error ? <div className="error-toast launcher-error">{error}</div> : null}
-
-        {sessions.length > 0 ? (
-          <div className="session-list">
-            {sessions.map((session) => (
-              <div key={session.id} className="session-card">
-                <div className="session-card-header">
-                  <div className="session-card-name">{session.name}</div>
-                  <div className="session-card-time">{formatRelativeTime(session.lastPlayedAt)}</div>
+    <main className="dsi-shell launcher-mode">
+      <div className="top-shell">
+        <div className="shoulder-bar">
+          <div className="shoulder-btn decorative">L</div>
+          <div className="shoulder-btn decorative">R</div>
+        </div>
+        <div className="screen-bezel top-bezel">
+          <div className="launcher-top-screen">
+            <div className="launcher-top-title">Platinum Web</div>
+            <div className="launcher-top-sub">Pokemon Platinum in your browser</div>
+            {romDownloadProgress !== null ? (
+              <div className="download-progress">
+                <div className="progress-bar">
+                  <div className="progress-fill" style={{ width: `${romDownloadProgress}%` }} />
                 </div>
-                <div className="session-card-meta">{session.sourceLabel}</div>
-                <div className="session-card-actions">
-                  <button className="session-card-btn primary" disabled={busy} onClick={() => onContinueSession(session)}>
-                    Continue
-                  </button>
-                  <button className="session-card-btn danger" disabled={busy} onClick={() => onDeleteSession(session)}>
-                    Delete
-                  </button>
-                </div>
+                <div className="progress-label">Downloading... {romDownloadProgress}%</div>
               </div>
-            ))}
+            ) : null}
+            <div className="launcher-top-status">{status}</div>
+            {error ? <div className="error-toast launcher-error">{error}</div> : null}
           </div>
-        ) : null}
+        </div>
+      </div>
 
-        <div className="launcher-divider">Start New</div>
+      <div className="hinge">
+        <div className={busy ? 'status-led loading' : 'status-led live'} />
+      </div>
 
-        <div className="launcher-actions">
-          <button className="welcome-btn" disabled={busy} onClick={onVanilla}>
-            Play Vanilla
-          </button>
-          <button
-            className="welcome-btn ghost"
-            disabled={busy}
-            onClick={() => setSettingsOpen(!settingsOpen)}
-          >
-            {settingsOpen ? 'Hide Settings' : 'Randomize & Play'}
-          </button>
-          {settingsOpen ? (
-            <SettingsPanel
-              toggles={toggles}
-              onChange={onToggleChange}
-              onStart={onCustomStart}
-              busy={busy}
-            />
-          ) : null}
-          <button
-            className="welcome-btn subtle"
-            disabled={busy}
-            onClick={() => romInputRef.current?.click()}
-          >
-            Import Your Own ROM
-          </button>
+      <div className="bottom-shell">
+        <div className="dpad-section">
+          <div className="dpad-container decorative">
+            <div className="dpad-cross" />
+            <div className="dpad-center" />
+          </div>
+        </div>
+
+        <div className="bottom-screen-wrapper">
+          <div className="screen-bezel bottom-bezel">
+            <div className="launcher-bottom-screen">
+              {sessions.length > 0 ? (
+                <div className="session-list">
+                  {sessions.map((session) => (
+                    <div key={session.id} className="session-card">
+                      <div className="session-card-header">
+                        <div className="session-card-name">{session.name}</div>
+                        <div className="session-card-time">{formatRelativeTime(session.lastPlayedAt)}</div>
+                      </div>
+                      <div className="session-card-meta">{session.sourceLabel}</div>
+                      <div className="session-card-actions">
+                        <button className="session-card-btn primary" disabled={busy} onClick={() => onContinueSession(session)}>
+                          Continue
+                        </button>
+                        <button className="session-card-btn danger" disabled={busy} onClick={() => onDeleteSession(session)}>
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="launcher-divider">Start New</div>
+                </div>
+              ) : null}
+
+              <div className="launcher-actions">
+                <button className="welcome-btn" disabled={busy} onClick={onVanilla}>
+                  Play Vanilla
+                </button>
+                <button
+                  className="welcome-btn ghost"
+                  disabled={busy}
+                  onClick={() => setSettingsOpen(!settingsOpen)}
+                >
+                  {settingsOpen ? 'Hide Settings' : 'Randomize & Play'}
+                </button>
+                {settingsOpen ? (
+                  <SettingsPanel
+                    toggles={toggles}
+                    onChange={onToggleChange}
+                    onStart={onCustomStart}
+                    busy={busy}
+                  />
+                ) : null}
+                <button
+                  className="welcome-btn subtle"
+                  disabled={busy}
+                  onClick={() => romInputRef.current?.click()}
+                >
+                  Import Your Own ROM
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="face-section">
+          <div className="face-container decorative">
+            <div className="face-btn x-btn">X</div>
+            <div className="face-btn y-btn">Y</div>
+            <div className="face-btn a-btn">A</div>
+            <div className="face-btn b-btn">B</div>
+          </div>
+        </div>
+
+        <div className="utility-row">
+          <div className="pill-btn decorative">Select</div>
+          <div className="pill-btn decorative">Start</div>
         </div>
       </div>
 

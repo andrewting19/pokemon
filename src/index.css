@@ -58,27 +58,43 @@ label, .status-text, .welcome-title, .welcome-sub, .drawer-label, .session-info,
 canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; background: #000; }
 .hidden-input { display: none; }
 
-.launcher-shell {
-  min-height: 100%;
-  min-height: 100dvh;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 28px 18px;
-  overflow-y: auto;
-  background:
-    radial-gradient(circle at top, rgba(79, 195, 247, 0.16), transparent 32%),
-    linear-gradient(180deg, #171a1f 0%, #0f1217 100%);
+/* Launcher mode: DSi shell with menu screens instead of emulator */
+.launcher-mode .decorative { pointer-events: none; opacity: 0.35; }
+.launcher-top-screen {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; padding: 16px 18px; text-align: center;
+  background: radial-gradient(ellipse at center, rgba(79, 195, 247, 0.06), transparent 70%),
+    linear-gradient(180deg, rgba(15, 18, 23, 0.97), rgba(10, 12, 16, 0.98));
+  z-index: 5;
 }
+.launcher-top-title { font-family: var(--font-display); font-size: 1.4rem; font-weight: 700; color: var(--text); }
+.launcher-top-sub { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.12em; margin-top: 4px; }
+.launcher-top-status { font-family: var(--font-mono); font-size: 0.62rem; color: var(--text-dim); margin-top: 10px; }
+.launcher-top-screen .download-progress { width: 80%; margin-top: 10px; }
+.launcher-top-screen .error-toast { font-size: 0.65rem; padding: 6px 10px; margin-top: 8px; position: static; transform: none; }
 
-.launcher-panel {
-  width: min(100%, 440px);
-  padding: 28px 22px;
-  border-radius: 24px;
-  background: rgba(12, 14, 18, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: 0 28px 64px rgba(0, 0, 0, 0.4);
+.launcher-bottom-screen {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  padding: 12px 14px; overflow-y: auto; overflow-x: hidden;
+  background: linear-gradient(180deg, rgba(15, 18, 23, 0.97), rgba(10, 12, 16, 0.98));
+  z-index: 5;
 }
+.launcher-bottom-screen .session-list { margin-bottom: 4px; }
+.launcher-bottom-screen .launcher-actions { display: flex; flex-direction: column; gap: 8px; }
+.launcher-bottom-screen .welcome-btn { font-size: 0.78rem; padding: 8px 16px; }
+.launcher-bottom-screen .settings-panel { padding: 8px 0; gap: 8px; }
+.launcher-bottom-screen .setting-label { font-size: 0.72rem; min-width: 65px; }
+.launcher-bottom-screen .segment-btn { font-size: 0.65rem; padding: 3px 7px; }
+.launcher-bottom-screen .preset-chip { font-size: 0.65rem; padding: 3px 9px; }
+.launcher-bottom-screen .session-card { padding: 8px 10px; }
+.launcher-bottom-screen .session-card-name { font-size: 0.78rem; }
+.launcher-bottom-screen .session-card-time { font-size: 0.62rem; }
+.launcher-bottom-screen .session-card-meta { font-size: 0.65rem; }
+.launcher-bottom-screen .session-card-btn { padding: 4px 10px; font-size: 0.65rem; }
+.launcher-mode .status-bar { display: none; }
+.launcher-bottom-screen::-webkit-scrollbar { width: 3px; }
+.launcher-bottom-screen::-webkit-scrollbar-track { background: transparent; }
+.launcher-bottom-screen::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 2px; }
 
 .launcher-kicker {
   font-family: 'JetBrains Mono', monospace;

@@ -94,6 +94,10 @@ canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; 
 .launcher-bottom-screen .session-card-meta { font-size: 0.65rem; }
 .launcher-bottom-screen .session-card-btn { padding: 4px 10px; font-size: 0.65rem; }
 .launcher-mode .status-bar { display: none; }
+.launcher-mode .bottom-shell { grid-template-rows: 1fr auto auto auto; }
+.launcher-mode .bottom-screen-wrapper { min-height: 0; overflow: hidden; }
+.launcher-mode .screen-bezel.bottom-bezel { flex-shrink: 1; min-height: 0; height: 100%; display: flex; flex-direction: column; }
+.launcher-bottom-screen { flex: 1 1 0; min-height: 0; }
 .launcher-bottom-screen::-webkit-scrollbar { width: 3px; }
 .launcher-bottom-screen::-webkit-scrollbar-track { background: transparent; }
 .launcher-bottom-screen::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 2px; }

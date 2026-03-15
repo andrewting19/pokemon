@@ -935,6 +935,7 @@ function App() {
     }
   }, [])
 
+
   const startVanillaLaunch = () => {
     setPendingBoot({ kind: 'bundled' })
     setMode('emulator')
@@ -995,7 +996,15 @@ function App() {
       window.location.reload()
     } catch (caught) {
       const message = caught instanceof Error ? caught.message : 'Custom randomizer startup failed.'
-      setError(message)
+      const debugRaw = window.localStorage.getItem('pokemon:randomizer-debug')
+      let failedStep = ''
+      if (debugRaw) {
+        try {
+          const debug = JSON.parse(debugRaw) as { currentStep?: string; error?: string }
+          failedStep = debug.currentStep ? ` [step: ${debug.currentStep}]` : ''
+        } catch { /* ignore */ }
+      }
+      setError(`${message}${failedStep}`)
       setStatus('The custom randomized run could not be prepared.')
       setRomDownloadProgress(null)
       setMode('launcher')

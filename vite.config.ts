@@ -39,7 +39,8 @@ export default defineConfig(({ mode }) => {
           ],
         },
         workbox: {
-          globPatterns: ['**/*.{js,css,html,png,svg,wasm}'],
+          cleanupOutdatedCaches: true,
+          globPatterns: ['**/*.{js,css,html,png,svg,wasm,rnqs}'],
           maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         },
       }),

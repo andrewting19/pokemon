@@ -212,6 +212,68 @@ export function releaseAllButtons(): void {
   wm._internal.emulatorButtonInput = 0
 }
 
+const ROM_CACHE_DB = 'platinum-web-rom-cache'
+const ROM_CACHE_STORE = 'roms'
+const ROM_CACHE_KEY = 'bundled-platinum'
+
+function openRomCacheDb(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(ROM_CACHE_DB, 1)
+    request.onupgradeneeded = () => {
+      const db = request.result
+      if (!db.objectStoreNames.contains(ROM_CACHE_STORE)) {
+        db.createObjectStore(ROM_CACHE_STORE)
+      }
+    }
+    request.onsuccess = () => resolve(request.result)
+    request.onerror = () => reject(request.error)
+  })
+}
+
+async function getCachedBundledRom(): Promise<Uint8Array | null> {
+  try {
+    const db = await openRomCacheDb()
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction(ROM_CACHE_STORE, 'readonly')
+      const store = tx.objectStore(ROM_CACHE_STORE)
+      const request = store.get(ROM_CACHE_KEY)
+      request.onsuccess = () => {
+        const result = request.result
+        if (result instanceof Blob) {
+          result.arrayBuffer().then(
+            (buf) => resolve(new Uint8Array(buf)),
+            () => resolve(null),
+          )
+        } else if (result instanceof Uint8Array) {
+          resolve(result)
+        } else if (result instanceof ArrayBuffer) {
+          resolve(new Uint8Array(result))
+        } else {
+          resolve(null)
+        }
+      }
+      request.onerror = () => reject(request.error)
+    })
+  } catch {
+    return null
+  }
+}
+
+async function cacheBundledRom(data: Uint8Array): Promise<void> {
+  try {
+    const db = await openRomCacheDb()
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(ROM_CACHE_STORE, 'readwrite')
+      const store = tx.objectStore(ROM_CACHE_STORE)
+      store.put(new Blob([data.buffer as ArrayBuffer]), ROM_CACHE_KEY)
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error)
+    })
+  } catch {
+    // Non-critical — next launch will just re-download.
+  }
+}
+
 export async function fetchBundledRomBuffer({
   onProgress,
   onStatus,
@@ -219,6 +281,14 @@ export async function fetchBundledRomBuffer({
   onProgress?: (progress: number | null) => void
   onStatus?: (message: string) => void
 } = {}): Promise<Uint8Array> {
+  onStatus?.('Checking for cached ROM...')
+
+  const cached = await getCachedBundledRom()
+  if (cached && cached.byteLength > 0 && looksLikeNintendoDsRom(cached)) {
+    onStatus?.('Loaded ROM from device cache.')
+    return cached
+  }
+
   onStatus?.('Downloading Pokemon Platinum...')
   onProgress?.(0)
 
@@ -259,7 +329,11 @@ export async function fetchBundledRomBuffer({
   const ds = new DecompressionStream('gzip')
   const decompressed = compressed.stream().pipeThrough(ds)
   const decompressedBlob = await new Response(decompressed).blob()
-  return new Uint8Array(await decompressedBlob.arrayBuffer())
+  const romData = new Uint8Array(await decompressedBlob.arrayBuffer())
+
+  void cacheBundledRom(romData)
+
+  return romData
 }
 
 export function saveFileExists(path: string): boolean {
